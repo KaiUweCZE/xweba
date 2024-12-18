@@ -1,0 +1,29 @@
+:root {
+  --bs-primary: #ff8c00;
+  --bs-primary-rgb: 255, 140, 0;
+  --bs-link-color: #ff8c00;
+  --bs-link-hover-color: #cc7000;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: #cc7000;
+  --bs-btn-hover-border-color: #cc7000;
+  --bs-btn-active-bg: #b36000;
+  --bs-btn-active-border-color: #b36000;
+}
+
+/* Odstranění zaoblených rohů */
+.btn,
+.card,
+.alert,
+.nav-pills .nav-link,
+.pagination .page-link,
+.form-control,
+.input-group-text,
+.modal-content,
+.dropdown-menu,
+.navbar-toggler {
+  border-radius: 0 !important;
+}
