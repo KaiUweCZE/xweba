@@ -1,4 +1,12 @@
 <?php
+session_start();
+
+// Kontrola přihlášení
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    header('Location: login.php');
+    exit;
+}
+
 // Získání aktuální stránky z URL
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
@@ -58,7 +66,7 @@ $titles = [
 
     <div class="navbar-nav">
       <div class="nav-item text-nowrap">
-        <a class="nav-link px-3" href="#">logout</a>
+        <a class="nav-link px-3" href="logout.php">logout</a>
       </div>
     </div>
   </header>

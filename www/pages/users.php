@@ -1,5 +1,9 @@
 <h1 class="pb-3 border-bottom">Users</h1>
 
+<div class="alert alert-info mt-4">
+  Přihlášený uživatel: <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong>
+</div>
+
 <section class="mt-5">
   <h2>Users Management</h2>
   <div class="table-responsive">
