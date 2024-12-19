@@ -10,22 +10,26 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 // Získání aktuální stránky z URL
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
 
-// Seznam povolených stránek
-$allowed_pages = ['dashboard', 'items', 'others', 'users'];
+// Seznam povolených stránek a jejich kontrolerů
+$controllers = [
+    'dashboard' => 'DashboardController',
+    'items' => 'ItemsController',
+    'others' => 'OthersController',
+    'users' => 'UsersController'
+];
 
 // Kontrola, zda stránka existuje
-if (!in_array($page, $allowed_pages)) {
+if (!array_key_exists($page, $controllers)) {
     $page = 'error';
 }
 
-// Mapování stránek na titulky
-$titles = [
-    'dashboard' => 'Dashboard',
-    'items' => 'Items',
-    'others' => 'Others',
-    'users' => 'Users',
-    'error' => 'Error 404'
-];
+// Načtení kontroleru
+$controllerName = $controllers[$page] ?? 'ErrorController';
+require_once "controllers/{$controllerName}.php";
+
+// Vytvoření instance kontroleru a spuštění akce
+$controller = new $controllerName();
+$content = $controller->index();
 ?>
 <!doctype html>
 <html lang="en">
@@ -113,7 +117,7 @@ $titles = [
       </nav>
 
       <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-3 pb-3">
-        <?php include "pages/{$page}.php"; ?>
+        <?php echo $content; ?>
       </main>
     </div>
   </div>
