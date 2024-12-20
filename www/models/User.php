@@ -7,8 +7,12 @@ class User {
         // Načteme uživatele ze session (dočasné řešení místo databáze)
         if (!isset($_SESSION['users'])) {
             $_SESSION['users'] = [
-                ['id' => 1, 'username' => 'admin', 'email' => 'admin@example.com', 'role' => 'Administrator'],
-                ['id' => 2, 'username' => 'user', 'email' => 'user@example.com', 'role' => 'User']
+                ['id' => 1, 'username' => 'admin', 'email' => 'admin@example.com', 'role' => 'Administrator',
+                 'firstname' => 'Admin', 'lastname' => 'Administrator', 'phone' => '', 'office' => 'Main Office',
+                 'description' => 'System Administrator', 'password' => 'admin'],
+                ['id' => 2, 'username' => 'user', 'email' => 'user@example.com', 'role' => 'User',
+                 'firstname' => 'Test', 'lastname' => 'User', 'phone' => '', 'office' => 'Office 1',
+                 'description' => 'Regular user', 'password' => 'user']
             ];
         }
         $this->users = $_SESSION['users'];
@@ -26,12 +30,17 @@ class User {
         return $this->users;
     }
 
-    public function addUser($username, $email, $role) {
+    public function addUser($email, $firstname, $lastname, $phone = '', $office = '', $description = '', $password = '', $role = 'User') {
         $id = count($this->users) + 1;
         $user = [
             'id' => $id,
-            'username' => $username,
             'email' => $email,
+            'firstname' => $firstname,
+            'lastname' => $lastname,
+            'phone' => $phone ?? '',
+            'office' => $office ?? '',
+            'description' => $description ?? '',
+            'password' => $password,
             'role' => $role
         ];
         $this->users[] = $user;
@@ -39,13 +48,18 @@ class User {
         return $user;
     }
 
-    public function updateUser($id, $username, $email, $role) {
+    public function updateUser($id, $email, $firstname, $lastname, $phone = '', $office = '', $description = '', $password = null, $role = 'User') {
         foreach ($this->users as $key => $user) {
             if ($user['id'] == $id) {
                 $this->users[$key] = [
                     'id' => $id,
-                    'username' => $username,
                     'email' => $email,
+                    'firstname' => $firstname,
+                    'lastname' => $lastname,
+                    'phone' => $phone ?? $user['phone'] ?? '',
+                    'office' => $office ?? $user['office'] ?? '',
+                    'description' => $description ?? $user['description'] ?? '',
+                    'password' => $password ?? $user['password'],
                     'role' => $role
                 ];
                 $_SESSION['users'] = $this->users;

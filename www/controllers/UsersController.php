@@ -10,16 +10,21 @@ class UsersController extends Controller {
     }
 
     public function index() {
-        $action = $_POST['action'] ?? '';
+        $action = $_GET['action'] ?? $_POST['action'] ?? '';
         $message = '';
 
         // Zpracování POST požadavků
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
             switch ($action) {
                 case 'add':
                     $this->userModel->addUser(
-                        $_POST['username'],
                         $_POST['email'],
+                        $_POST['firstname'],
+                        $_POST['lastname'],
+                        $_POST['phone'] ?? '',
+                        $_POST['office'] ?? '',
+                        $_POST['description'] ?? '',
+                        $_POST['password'],
                         $_POST['role']
                     );
                     $message = 'Uživatel byl úspěšně přidán.';
@@ -28,8 +33,13 @@ class UsersController extends Controller {
                 case 'edit':
                     $this->userModel->updateUser(
                         $_POST['id'],
-                        $_POST['username'],
                         $_POST['email'],
+                        $_POST['firstname'],
+                        $_POST['lastname'],
+                        $_POST['phone'] ?? '',
+                        $_POST['office'] ?? '',
+                        $_POST['description'] ?? '',
+                        !empty($_POST['password']) ? $_POST['password'] : null,
                         $_POST['role']
                     );
                     $message = 'Uživatel byl úspěšně upraven.';
