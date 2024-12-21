@@ -1,34 +1,34 @@
+<?php
+$data = $_SESSION['view_data'] ?? [];
+$logins = $data['logins'] ?? [];
+?>
+
 <h1 class="pb-3 border-bottom">Dashboard</h1>
 
 <section class="mt-5">
-  <h2>Table example</h2>
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">#</th>
-        <th scope="col">First</th>
-        <th scope="col">Last</th>
-        <th scope="col">Handle</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <th scope="row">1</th>
-        <td>Mark</td>
-        <td>Otto</td>
-        <td>@mdo</td>
-      </tr>
-      <tr>
-        <th scope="row">2</th>
-        <td>Jacob</td>
-        <td>Thornton</td>
-        <td>@fat</td>
-      </tr>
-      <tr>
-        <th scope="row">3</th>
-        <td colspan="2">Larry the Bird</td>
-        <td>@twitter</td>
-      </tr>
-    </tbody>
-  </table>
+    <h2>Poslední přihlášení</h2>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Jméno</th>
+                    <th>Příjmení</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Čas přihlášení</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($logins as $login): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($login['firstname']); ?></td>
+                    <td><?php echo htmlspecialchars($login['lastname']); ?></td>
+                    <td><?php echo htmlspecialchars($login['email']); ?></td>
+                    <td><?php echo htmlspecialchars($login['role']); ?></td>
+                    <td><?php echo htmlspecialchars(date('d.m.Y H:i:s', strtotime($login['login_time']))); ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 </section>
