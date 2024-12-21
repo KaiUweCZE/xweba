@@ -2,18 +2,38 @@
 $data = $_SESSION['view_data'] ?? [];
 $users = $data['users'] ?? [];
 $message = $data['message'] ?? '';
-$currentUser = $data['currentUser'] ?? null; // Přidáno pro kontrolu práv
-error_log("Session data: " . print_r($_SESSION, true));
-error_log("View data: " . print_r($data, true));
+$currentUser = $data['currentUser'] ?? null; 
 ?>
+<script type="module">
+    import { validateForm, showNotification } from './assets/js/users.js';
+
+    // Přidáme validaci na všechny formuláře
+    document.querySelectorAll("form").forEach((form) => {
+        form.addEventListener("submit", function (e) {
+            if (!validateForm(this)) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    // Přidáme potvrzení pro mazání
+    document.querySelectorAll('button[onclick*="confirm"]').forEach((button) => {
+        button.onclick = function (e) {
+            e.preventDefault();
+            if (confirm("Opravdu chcete smazat tohoto uživatele?")) {
+                this.closest("form").submit();
+            }
+        };
+    });
+
+    <?php if ($message): ?>
+        showNotification(<?php echo json_encode($message); ?>);
+    <?php endif; ?>
+</script>
+
+
 <h1 class="pb-3 border-bottom">Users</h1>
 
-<?php if ($message): ?>
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <?php echo htmlspecialchars($message); ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-<?php endif; ?>
 
 <?php if ($currentUser && $currentUser['role'] === 'Administrator'): ?>
 <!-- Formulář pro přidání uživatele - viditelný pouze pro administrátory -->
