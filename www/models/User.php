@@ -1,92 +1,113 @@
 <?php
 class User {
+    private $db;
     private $currentUser;
-    private $users = [];
 
     public function __construct() {
-        // Načteme uživatele ze session (dočasné řešení místo databáze)
-        if (!isset($_SESSION['users'])) {
-            $_SESSION['users'] = [
-                ['id' => 1, 'username' => 'admin', 'email' => 'admin@example.com', 'role' => 'Administrator',
-                 'firstname' => 'Admin', 'lastname' => 'Administrator', 'phone' => '', 'office' => 'Main Office',
-                 'description' => 'System Administrator', 'password' => 'admin'],
-                ['id' => 2, 'username' => 'user', 'email' => 'user@example.com', 'role' => 'User',
-                 'firstname' => 'Test', 'lastname' => 'User', 'phone' => '', 'office' => 'Office 1',
-                 'description' => 'Regular user', 'password' => 'user']
-            ];
+        try {
+            // Připojení k databázi - používáme název služby 'db' z docker-compose
+            $this->db = new PDO(
+                "mysql:host=db;dbname=mojedatabaze",
+                "uzivatel",
+                "heslo"
+            );
+            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            // Log error nebo throw new Exception s lepší zprávou
+            throw new Exception("Nepodařilo se připojit k databázi: " . $e->getMessage());
         }
-        $this->users = $_SESSION['users'];
     }
-
-    public function setCurrentUser($username) {
-        $this->currentUser = $username;
-    }
-
-    public function getCurrentUser() {
-        return $this->currentUser;
-    }
-
     public function getAllUsers() {
-        return $this->users;
+        $stmt = $this->db->query("SELECT * FROM users ORDER BY id");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function addUser($email, $firstname, $lastname, $phone = '', $office = '', $description = '', $password = '', $role = 'User') {
-        $id = count($this->users) + 1;
-        $user = [
-            'id' => $id,
-            'email' => $email,
-            'firstname' => $firstname,
-            'lastname' => $lastname,
-            'phone' => $phone ?? '',
-            'office' => $office ?? '',
-            'description' => $description ?? '',
-            'password' => $password,
-            'role' => $role
-        ];
-        $this->users[] = $user;
-        $_SESSION['users'] = $this->users;
-        return $user;
+        $stmt = $this->db->prepare("INSERT INTO users (email, firstname, lastname, phone, office, description, password, role) 
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        return $stmt->execute([
+            $email, 
+            $firstname, 
+            $lastname, 
+            $phone, 
+            $office, 
+            $description, 
+            $password,
+            //password_hash($password, PASSWORD_DEFAULT), // Hashování hesla
+            $role
+        ]);
     }
 
     public function updateUser($id, $email, $firstname, $lastname, $phone = '', $office = '', $description = '', $password = null, $role = 'User') {
-        foreach ($this->users as $key => $user) {
-            if ($user['id'] == $id) {
-                $this->users[$key] = [
-                    'id' => $id,
-                    'email' => $email,
-                    'firstname' => $firstname,
-                    'lastname' => $lastname,
-                    'phone' => $phone ?? $user['phone'] ?? '',
-                    'office' => $office ?? $user['office'] ?? '',
-                    'description' => $description ?? $user['description'] ?? '',
-                    'password' => $password ?? $user['password'],
-                    'role' => $role
-                ];
-                $_SESSION['users'] = $this->users;
-                return true;
-            }
+        // Kontrola oprávnění
+        if (!$this->canEditUser($id)) {
+            return false;
         }
-        return false;
+
+        if ($password !== null) {
+            $sql = "UPDATE users SET email = ?, firstname = ?, lastname = ?, phone = ?, 
+                    office = ?, description = ?, password = ?, role = ? WHERE id = ?";
+            $params = [$email, $firstname, $lastname, $phone, $office, $description, $password
+                     /* password_hash($password, PASSWORD_DEFAULT)*/, $role, $id];
+        } else {
+            $sql = "UPDATE users SET email = ?, firstname = ?, lastname = ?, phone = ?, 
+                    office = ?, description = ?, role = ? WHERE id = ?";
+            $params = [$email, $firstname, $lastname, $phone, $office, $description, $role, $id];
+        }
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 
     public function deleteUser($id) {
-        foreach ($this->users as $key => $user) {
-            if ($user['id'] == $id) {
-                unset($this->users[$key]);
-                $this->users = array_values($this->users); // Reindexuje pole
-                $_SESSION['users'] = $this->users;
-                return true;
-            }
+        // Kontrola oprávnění
+        if (!$this->canEditUser($id)) {
+            return false;
         }
-        return false;
+
+        $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
+        return $stmt->execute([$id]);
     }
 
     public function getUserById($id) {
-        foreach ($this->users as $user) {
-            if ($user['id'] == $id) {
-                return $user;
-            }
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function canEditUser($userId) {
+        if (!$this->currentUser) {
+            return false;
         }
-        return null;
+
+        // Získáme aktuálního uživatele
+        $stmt = $this->db->prepare("SELECT role FROM users WHERE id = ?");
+        $stmt->execute([$this->currentUser]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Správci mohou editovat všechny
+        if ($user['role'] === 'Administrator') {
+            return true;
+        }
+
+        // Běžní uživatelé mohou editovat pouze sebe
+        return $userId == $this->currentUser;
+    }
+
+    public function getCurrentUser() {
+        error_log("Getting current user, currentUser ID is: " . print_r($this->currentUser, true));
+        
+        if (!$this->currentUser) {
+            error_log("No current user set");
+            return null;
+        }
+        $user = $this->getUserById($this->currentUser);
+        error_log("Retrieved user data: " . print_r($user, true));
+        return $user;
+    }
+    
+    public function setCurrentUser($userId) {
+        error_log("Setting current user ID to: " . $userId);
+        $this->currentUser = $userId;
     }
 }

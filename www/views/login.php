@@ -1,22 +1,6 @@
 <?php
-session_start();
-
-// Pokud je uživatel již přihlášen, přesměrujeme ho na index
-if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: index.php');
-    exit;
-}
-
-// Zpracování přihlašovacího formuláře
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Uložíme uživatelské jméno do session
-    $_SESSION['username'] = $_POST['username'];
-    $_SESSION['logged_in'] = true;
-    
-    // Přesměrování na hlavní stránku
-    header('Location: index.php');
-    exit;
-}
+$data = $_SESSION['view_data'] ?? [];
+$error = $data['error'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,14 +17,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card">
                     <div class="card-body">
                         <h2 class="card-title text-center mb-4">Přihlášení</h2>
+                        <?php if ($error): ?>
+                        <div class="alert alert-danger" role="alert">
+                            <?php echo htmlspecialchars($error); ?>
+                        </div>
+                        <?php endif; ?>
                         <form method="post">
                             <div class="mb-3">
-                                <label for="username" class="form-label">Uživatelské jméno</label>
-                                <input type="text" class="form-control" id="username" name="username" required>
+                                <label for="username" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="username" name="username" required>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Heslo</label>
-                                <input type="password" class="form-control" id="password" name="password">
+                                <input type="password" class="form-control" id="password" name="password" required>
                             </div>
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Přihlásit se</button>
