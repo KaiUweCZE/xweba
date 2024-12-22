@@ -5,7 +5,7 @@ $message = $data['message'] ?? '';
 $currentUser = $data['currentUser'] ?? null; 
 ?>
 <script type="module">
-    import { validateForm, showNotification } from './assets/js/users.js';
+    import {deleteUser, validateForm, showNotification } from './js/users.js';
 
     // Přidáme validaci na všechny formuláře
     document.querySelectorAll("form").forEach((form) => {
@@ -16,15 +16,17 @@ $currentUser = $data['currentUser'] ?? null;
         });
     });
 
-    // Přidáme potvrzení pro mazání
-    document.querySelectorAll('button[onclick*="confirm"]').forEach((button) => {
-        button.onclick = function (e) {
-            e.preventDefault();
-            if (confirm("Opravdu chcete smazat tohoto uživatele?")) {
-                this.closest("form").submit();
-            }
-        };
+    // Event listenery pro delete tlačítka
+    document.querySelectorAll('.delete-user').forEach(button => {
+    button.addEventListener('click', function() {
+        const userId = this.getAttribute('data-user-id');
+        if (confirm('Opravdu chcete smazat tohoto uživatele?')) {
+            console.log('Mažu uživatele s ID:', userId);
+            deleteUser(userId);
+        }
     });
+});
+
 
     <?php if ($message): ?>
         showNotification(<?php echo json_encode($message); ?>);
@@ -102,7 +104,7 @@ $currentUser = $data['currentUser'] ?? null;
             </thead>
             <tbody>
                 <?php foreach ($users as $user): ?>
-                <tr>
+                <tr data-user-id="<?php echo htmlspecialchars($user['id'] ?? ''); ?>">
                     <td><?php echo htmlspecialchars($user['id'] ?? ''); ?></td>
                     <td><?php echo htmlspecialchars($user['firstname'] ?? ''); ?></td>
                     <td><?php echo htmlspecialchars($user['lastname'] ?? ''); ?></td>
@@ -117,13 +119,10 @@ $currentUser = $data['currentUser'] ?? null;
                         </button>
                         
                         <?php if ($currentUser['role'] === 'Administrator'): ?>
-                        <form method="post" class="d-inline">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id" value="<?php echo $user['id']; ?>">
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Opravdu chcete smazat tohoto uživatele?')">
-                                Delete
-                            </button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-danger delete-user" 
+                            data-user-id="<?php echo $user['id']; ?>">
+                            Delete
+                        </button>
                         <?php endif; ?>
                         <?php endif; ?>
                     </td>

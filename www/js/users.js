@@ -79,6 +79,36 @@ export function showNotification(message, type = "success") {
   }, 3000);
 }
 
+export async function deleteUser(userId) {
+  if (!confirm("Opravdu chcete smazat tohoto uživatele?")) {
+    return;
+  }
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append("action", "delete");
+    formData.append("id", userId);
+
+    const response = await fetch("index.php?page=users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData.toString(),
+    });
+
+    if (response.ok) {
+      // Odstraníme řádek z tabulky
+      document.querySelector(`tr[data-user-id="${userId}"]`)?.remove();
+      showNotification("Uživatel byl úspěšně smazán.");
+    } else {
+      showNotification("Při mazání uživatele došlo k chybě.", "danger");
+    }
+  } catch (error) {
+    showNotification("Při mazání uživatele došlo k chybě.", "danger");
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   // Přidáme validaci na všechny formuláře
   document.querySelectorAll("form").forEach((form) => {
@@ -90,12 +120,12 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Přidáme potvrzení pro mazání
-  document.querySelectorAll('button[onclick*="confirm"]').forEach((button) => {
+  /* document.querySelectorAll('button[onclick*="confirm"]').forEach((button) => {
     button.onclick = function (e) {
       e.preventDefault();
       if (confirm("Opravdu chcete smazat tohoto uživatele?")) {
         this.closest("form").submit();
       }
     };
-  });
+  });*/
 });
